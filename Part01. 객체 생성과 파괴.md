@@ -17,11 +17,13 @@
 ```java
 public final class Boolean implements java.io.Serializable, Comparable<Boolean> {
 
-    //static field
-    public static final Boolean TRUE = new Boolean(true);
+    // static field
+    // TRUE는 프로그램이 종료될 때까지 같은 Boolean 객체를 참조 (FALSE도)
+    public static final Boolean TRUE = new Boolean(true); 
     public static final Boolean FALSE = new Boolean(false);
 
-    //static method
+    // static method (Boolean 객체를 생성하지 않아도 사용 가능)
+    // ex) System.out.println(java.lang.String.valueOf(true));
     public static Boolean valueOf(boolean b) {
         return (b ? TRUE : FALSE);
     }
@@ -34,14 +36,17 @@ public final class Boolean implements java.io.Serializable, Comparable<Boolean> 
 
 유틸리티성 메서드들은 `static method`로 설계하는 것이 이득임.
 
-위의 **valueOf(boolean b)** 는 Boolean 객체를 생성하지 않아도 사용 가능함.
+&nbsp;
 
-`ex) System.out.println(java.lang.String.valueOf(true));`
+`TRUE`를 계속 만들면 그것들은 같은 객체를 참조하고 있는 것임.
+
+이렇게 쓰려면 `new Boolean(true)` 가 불변이어야 함.
 
 &nbsp;
 
 **User.class**
 ```java
+// public 생성자 없이 객체 생성이 가능
 public class User() {
     private String name;
 
@@ -55,16 +60,6 @@ public class User() {
 }
 ```
 
-어? new Boolean(true) 니까 TRUE를 만들 때마다 new Boolean 을 생성하는 것이 아니냐고 할 수 있는데 나도 잠시 헷갈렸음. 
-
-이거 TRUE는 프로그램종료될때까지 계속 같은 Boolean 객체를 참조함. 
-
-TRUE를 계속 만들면 그것들은 같은 객체를 참조하고 있는 것임.
-
-이렇게 쓰려면 new Boolean(true) 가 불변이어야 함.
-
-=> **public 생성자 없이도 객체 생성 가능.**
-
 ( static method 의 장단점 : item1 참고)
 
 &nbsp;
@@ -74,7 +69,9 @@ TRUE를 계속 만들면 그것들은 같은 객체를 참조하고 있는 것�
 
 **User.class**
 ```java
-public class User() {
+import lombok.Builder;
+
+class User {
     private Long id;
     private String name;
     private String password;
@@ -86,21 +83,24 @@ public class User() {
         this.password = password;
     }
 }
+
+public class Main {
+    public static void main(String[] args) {
+
+        //builder()가 static method임
+        User user1 = User.builder().id(1L).name("황준오").build(); 
+        User user2 = User.builder().id(2L).name("황준오").password("pass").build();
+    }
+}
 ```
-
-`ex) User.builder().id(1L).name("황준오").build();`
-
-`ex) User.builder().id(2L).name("황준오").password("pass").build();`
-
-`builder()` 가 `static method` 이다.
 
 &nbsp;
 
 **빌더패턴은 계층형 클래스에서 쓰기 좋다**
 
-- 피자 (`public abstract class Pizza`) 코드 2-4
-    + 뉴욕 피자 (`public class NyPizza extends Pizza`) 코드 2-5
-    + 칼초네 피자 (`public class Calzone extends Pizza`) 코드 2-6
+- 피자 (`public abstract class Pizza`) [코드 2-4](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/Pizza.java)
+    + 뉴욕 피자 (`public class NyPizza extends Pizza`) [코드 2-5](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/NyPizza.java)
+    + 칼초네 피자 (`public class Calzone extends Pizza`) [코드 2-5](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/Calzone.java)
 
 성능상으로는 매개변수가 4개 이상일 때 값어치를 한다.
 
@@ -111,7 +111,7 @@ public class User() {
 
 ### Singleton
 
-#### 싱글톤 1. static final 변수
+#### 싱글톤 구현 1. static final 변수
 
 ```java
 public class Util {
@@ -121,11 +121,14 @@ public class Util {
     }
 
     //...
+    // 장점 : p24
 }
-```
 
-**문제점 1) 리플렉션으로 private 생성자로 객체생성 가능.**
-```java
+======================================
+
+// 문제점 1) 리플렉션으로 객체생성 가능 (private 생성자 호출)
+public class Main {
+    public static void main(String[] args) {
         Constructor<?> con = Util.class.getDeclaredConstructors()[0];
         con.setAccessible(true);
 
@@ -134,17 +137,19 @@ public class Util {
 
         System.out.println(util1); //Util@4554617c
         System.out.println(util2); //Util@74a14482   hashcode가 다르다!!
+    }
+}
+
+======================================
+
+// 문제점 2) 직렬화할 때 추가적인 작업 필요
+// implements Serializable 만으로 직렬화를 하면
+// 역직렬화할 때마다 새로운 인스턴스가 만들어짐.
 ```
-
-**문제점 2) 직렬화 할 때 추가적인 작업 필요**
-
-implements Serializable 만으로 직렬화를 하면
-
-역직렬화할 때마다 새로운 인스턴스가 만들어짐.
 
 &nbsp;
 
-#### 싱글톤 2. staic method
+#### 싱글톤 구현 2. staic method
 
 ```java
 public class Util {
@@ -155,11 +160,14 @@ public class Util {
     }
 
     //...
+    // 장점 : p24
 }
-```
 
-**문제점 1) 리플렉션으로 private 생성자로 객체생성 가능.**
-```java
+======================================
+
+// 문제점 1) 리플렉션으로 객체생성 가능 (private 생성자 호출)
+public class Main {
+    public static void main(String[] args) {
         Constructor<?> con = Util.class.getDeclaredConstructors()[0];
         con.setAccessible(true);
 
@@ -168,17 +176,19 @@ public class Util {
 
         System.out.println(util1); //Util@4554617c
         System.out.println(util2); //Util@74a14482   hashcode가 다르다!!
+    }
+}
+
+======================================
+
+// 문제점 2) 직렬화할 때 추가적인 작업 필요
+// implements Serializable 만으로 직렬화를 하면
+// 역직렬화할 때마다 새로운 인스턴스가 만들어짐.
 ```
-
-**문제점 2) 직렬화 할 때 추가적인 작업 필요**
-
-implements Serializable 만으로 직렬화를 하면
-
-역직렬화할 때마다 새로운 인스턴스가 만들어짐.
 
 &nbsp;
 
-#### 싱글톤 3. enum
+#### 싱글톤 구현 3. enum
 
 ```java
 // 열거 타입 방식의 싱글턴 - 바람직한 방법 (25쪽)
@@ -210,24 +220,37 @@ https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effect
 ```java
 public final class Math {
 
-    // 생성자가 존재하는데 호출이 불가능한 것은 직관적이지 않으므로 아래처럼 주석을 다는 것이 좋음.
     /**
      * Don't let anyone instantiate this class.
      */
     private Math() {}
+
+    //...
+}
+
+======================================
+
+public class Main {
+    public static void main(String[] args) {
+        Math math = new Math(); 
+        // erorr! 생성자가 없음. 
+        // (Math클래스의 인스턴스를 만들 방법도 없음.)
+    }
+}
+
 ```
 
-`Math math = new Math();` 는 에러다.
+애초에 `Math.class`는 유틸리티성으로 만들었다.
 
-왜? 애초에 Math는 유틸리티성으로 만들었다.
-
-안에 보면 필드,메서드 모두 **static** 이다.
+`Math.class` 의 필드, 메서드는 모두 **static** 이다.
 
 &nbsp;
 
-**`item4`에서 말하고자하는 것은 이런 유틸리티 클래스(Math, Arrays, Collections 등)에 private 생성자를 만들라는 것이다.**
-
-만들지 않으면 public Math()가 생성되므로 실수로 객체를 생성할 여지가 있으니까.
+- 이런 유틸리티 클래스(Math, Arrays, Collections 등)에 private 생성자를 만들 것
+    + 만들지 않으면 public Math() 가 생성됨
+        * 실수로 객체를 생성할 여지를 줌
+    + 주석도 추가해야 함
+        * 생성자가 존재하는데 호출이 불가능한 것은 직관적이지 않기 때문
 
 &nbsp;
 &nbsp;
