@@ -100,7 +100,7 @@ public class Main {
 
 - 피자 (`public abstract class Pizza`) [코드 2-4](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/Pizza.java)
     + 뉴욕 피자 (`public class NyPizza extends Pizza`) [코드 2-5](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/NyPizza.java)
-    + 칼초네 피자 (`public class Calzone extends Pizza`) [코드 2-5](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/Calzone.java)
+    + 칼초네 피자 (`public class Calzone extends Pizza`) [코드 2-6](https://github.com/WegraLee/effective-java-3e-source-code/blob/master/src/effectivejava/chapter2/item2/hierarchicalbuilder/Calzone.java)
 
 성능상으로는 매개변수가 4개 이상일 때 값어치를 한다.
 
