@@ -255,4 +255,203 @@ public class Main {
 &nbsp;
 &nbsp;
 
+#### 객체 주입 방식
+
+유틸리티성으로 쓰이는 클래스를 설계하더라도 static으로 쓰지말아야 할 때도 있다.
+
+```java
+//코드 5-3
+public class SpelChecker {
+    private final Lexicon dictionary;
+
+    public SpellChecker(Lexicon dictionary) {
+        this.dictionary = Objects.requireNonNull(dictionary);
+    }
+
+    //...
+}
+```
+
+- 객체 주입 방식
+    + 위처럼 인스턴스를 생성할 때 다른 객체를 주입받는 방법.
+
+- 코드 5-1(static), 코드 5-2(싱글턴)
+    + 유연하지 않다
+        * dictionary가 언어별로, 특수어휘용이 있을 수 있다.
+    + 테스트하기 어렵다
+        * dictionary를 대체하기 어렵다.
+
+&nbsp;
+&nbsp;
+
+### 불필요한 객체 생성  최소화
+
+#### 1) String
+
+```java
+// Bad! Regacy Code
+public class RomanNumerals {
+    static boolean isRomanNumeral(String s) {
+        return s.matches("^(?=.)M*(C[MD]|D?C{0,3" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+    }
+}
+
+=============================================================
+
+// Good !
+public class RomanNumerals {
+    private static final Pattern ROMAN = Pattern.compile("^(?=.)M*(C[MD]|D?C{0,3" + "(X[CL]|L?X{0,3})(I[XV]|V?I{0,3})$");
+
+    static boolean isRomanNumeral(String s) {
+        return ROMAN.matcher(s).matches();
+    }
+}
+
+```
+
+- Bad
+    + `isRomanNumeral(String s)` 를 호출할 때마다 `새로운 String 객체`를 생성함.
+- Good
+    + `isRomanNumeral(String s)` 를 호출할 때마다 `ROMAN`을 참조함.
+
+&nbsp;
+
+#### 2) auto boxing
+
+- JDK 1.5 이후 `AutoBoxing`과 `AutoUnBoxing`을 제공
+    + AutoBoxing
+        + `Long num1 = 5L;` 
+        + `Long num1 = new Long(5L);`
+    + AutoUnBoxing
+        + `long num2 = num1;` 
+        + `Long num2 = num1.intValue();`
+
+```java
+// bad!
+private static long sum() {
+    Long sum = 0L;
+    for (long i = 0; i <= Integer.MAX_VALUE; i++) 
+        sum += i;
+
+    return sum;
+}
+
+// good!
+private static long sum() {
+    long sum = 0L;
+    for (long i = 0; i<= Integer.MAX_VALUE; i++)
+        sum += i;
+
+    return sum;
+}
+```
+
+- bad
+    + 15780 ms
+    + for문이 한번 돌 때마다 새로운 Long 객체 생성
+        * 책에는 **231**개의 불필요한 Long 객체 생성한다고 되어 있음
+        * `Integer.MAX_VALUE` 개 일줄 알았는데..
+        * TODO :: Long 에 대해서 모르는게 있는 것 같음.
+- good
+    + 3031 ms
+
+&nbsp;
+&nbsp;
+
+### 객체 반납
+
+사용하지 않는 객체는 GC에 의해 메모리 반납함.
+
+반납하지 않으면 메모리 누수를 일으킨다.
+
+&nbsp;
+
+#### GC 대상
+
+1. **모든 객체 참조가 null 인 경우**
+2. 객체가 블럭 안에서 생성되고 블럭이 종료된 경우
+3. 부모 객체가 null이 된 경우, 자식 객체는 자동적으로 GC 대상이 된다.
+4. 객체가 Weak 참조만 가지고 있을 경우
+5. 객체가 Soft 참조이지만 메모리 부족이 발생한 경우
+출처: [IT 마이닝](http://itmining.tistory.com/24)
+
+```java
+    // 객체 생성 ( + 참조)
+    List list = new ArrayList();
+
+    // 참조 제거
+    list = null;
+
+    //이제 ArrayList는 GC대상이다.
+```
+
+**Stack.class** 에는 
+
+```java
+Stack stack<User> = new Stack<>();
+
+stack.push(user1);
+stack.push(user2);
+stack.push(user3);
+
+stack.pop(); //이 때 user3의 참조를 null처리 한다.
+```
+
+TODO :: 캐시와 리스너,콜백도 메모리 누수를 일으키는 주범.
+
+캐시 : WeakHashMap 사용.
+리스너,콜백 : weak reference로 콜백 저장.
+[백기선님 유튜브](https://youtu.be/YijcBaS4cu8)
+
+&nbsp;
+
+#### 자원 반납
+
+- **finalizer**
+    + 자바9에서는 사용자제 API로 지정됨
+    + 오동작, 낮은 성능, 이식성 문제
+        + 쓰지 마시오...
+- **cleaner**
+    + 자바9 이후 사용가능
+    + 여전히 예측할 수 없고, 느리고, 불필요
+
+- **finalizer & cleaner**
+    + 즉시 수행된다는 보장이 없음
+        + GC에 따라 천차만별
+    + 중요하지 않은 네이티브 자원 회수용으로만 사용할것
+        + 불확실성, 성능저하 여전히 문제
+
+&nbsp;
+
+**try-finally**
+```java
+// 코드 9-1
+//bad!
+BufferedReader br = new BufferedReader(new FileReader(path));
+try{
+    return br.readLine();
+} finally {
+    br.close();
+}
+```
+
+- try-finally가 이중 삼중으로 중첩되면 복잡함.
+    + 코딩 실수할 가능성 큼.
+
+**try-with-reference**
+```java
+// 코드 9-3
+//good!
+try (BufferedReader br = new BufferedREader(new FileReader(path))) {
+    return br.readLine();
+}
+```
+
+- 정확하고 쉽게 자원회수 가능
+    + try () 안에 자원 넣기
+
+
+
+
+
 
