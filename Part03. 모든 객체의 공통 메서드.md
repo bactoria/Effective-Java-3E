@@ -20,7 +20,7 @@
 
 &nbsp;
 
-### equals
+### 1. equals
 
 ```java
     @Override
@@ -29,7 +29,7 @@
     }
 ```
 
-- 재정의하지 않으면?
+- equals를 재정의하지 않으면?
     + **오직 자기 자신과만 같음** (User@4554617c == User@4554617c)
     + 물리적으로 동일함
 - 재정의 해야 할 경우는 언제인가?
@@ -67,7 +67,7 @@
 &nbsp;
 &nbsp;
 
-### hashCode
+### 2. hashCode
 
 ```java
     @Override
@@ -132,4 +132,55 @@ user1와 user2는 모두 나 자신이다.
 
 &nbsp;
 &nbsp;
+
+### 3. toString
+
+toString은 항상 재정의하라.
+
+- toString 을 재정의하지 않으면?
+    + 클래스이름@해쉬코드 (ex. User@4554617c)
+    + 클래스에 대해 알기 어려움
+- toString 장점
+    + 해당 객체에 대해 자세히 알 수 있음
+    + 디버깅이 쉽다
+- toString 단점
+    + 유연성 떨어짐
+        * 릴리즈 이후에 포맷을 바꾼다면 기존의 toString에 의존한 코드는 에러 가능성
+
+&nbsp;
+&nbsp;
+
+### 4. clone
+
+clone : 해당 클래스의 필드들을 복사한 객체를 반환
+
+```java
+public class Hello implements Cloneable{
+
+    private String message;
+
+    @Override
+    protected Hello clone() throws CloneNotSupportedException {
+        return (Hello) super.clone();
+    }
+}
+
+---------------------------------
+
+    Hello hello = new Hello();
+
+    Hello hello1 = hello;
+    Hello hello2 = hello.clone();
+
+    System.out.println(hello); // Hello@7b69c6ba
+    System.out.println(hello1);// Hello@7b69c6ba
+    System.out.println(hello2);// Hello@46daef40
+
+```
+
+TODO :: HashTable에서의 Clone
+
+클론은 **복사생성자**, **복사팩터리** 사용을 추천 **(배열 제외)**
+
+복사 생성자 : 단순히 자신과 같은 클래스의 인스턴스를 인수로 받는 생성자
 
