@@ -184,3 +184,63 @@ TODO :: HashTable에서의 Clone
 
 복사 생성자 : 단순히 자신과 같은 클래스의 인스턴스를 인수로 받는 생성자
 
+&nbsp;
+&nbsp;
+
+### 5. Comparable
+
+Object의 메서드는 아님
+
+Comparable을 구현하면 인스턴스를 sorting할 수 있음.
+
+순서가 명확한 값 클래스라면 Comparable 구현을 고려
+
+
+#### Case1. Node에서 Comparable 구현
+```java
+class Node implements Comparable<Node> {
+    private int next;
+    private int value;
+
+    //...
+
+    @Override
+    public int compareTo(Node o) {
+        // TODO Auto-generated method stub
+        return value - o.value;
+    }
+}
+
+---------------------------------------------
+
+Queue<Node> q = new PriorityQueue<>();
+
+```
+
+&nbsp;
+
+#### Case2. Comparator 생성
+```java
+class Node{
+    private int next;
+    private int value;
+
+    //...
+}
+
+---------------------------------------------
+
+// 1. Basic
+Queue<Node> q = new PriorityQueue<>( new Comparator<Node>() {
+    @Override
+        public int compare(Node o1, Node o2) {
+            return o1.getValue() - o2.getValue();
+        }
+});
+
+// 2. Lambda (Java8 이상)
+Queue<Node> q2 = new PriorityQueue<>((o1, o2) -> o1.getValue() - o2.getValue());
+
+// 3. comparingInt (Java8 이상)
+Queue<Node> q2 = new PriorityQueue<>(Comparator.comparingInt(Node::getValue));
+```
