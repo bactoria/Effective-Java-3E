@@ -104,4 +104,73 @@ ex) String, BigInteger, BigDecimal
 &nbsp;
 &nbsp;
 
-### Todo :: item 18
+### 상속 vs 컴포지션
+
+**상속**
+
+```java
+public class MySet<E> extends HashSet<E> {
+
+}
+
+MyHashSet<String> s = new MyHashSet<>();
+
+```
+
+기존 클래스를 확장
+
+구현 상속(클래스가 클래스를 확장)은 캡슐화를 깨트린다.
+
+상위클래스가 변경되면 하위클래스에 이상이 생길 수 있음.
+
+상속은 is-a 관계일 때만 써야 한다. ex) 소고기는 고기, 귤은 과일
+
+&nbsp;
+
+**컴포지션**
+
+```java
+public class ForwardingSet<E> implements Set<E> {
+    private final Set<E> s;
+    public ForwardingSet(Set<E> s) { this.s = s; }
+
+    //...
+}
+
+
+public class WrapperSet<E> extends ForwardingSet<E> {
+
+}
+
+```
+
+상속대신 컴포지션을 사용하면 됨.
+
+컴포지션 : 기존 클래스를 확장하지 않고, 새로운 클래스(ForwardingSet)를 만들고 private필드로 기존 클래스의 인스턴스(s)를 참조
+
+상위클래스의 결함을 숨길 수 있음.
+
+&nbsp;
+&nbsp;
+
+### 상속 (구현상속)
+
+상속용 클래스를 만들려면 
+
+클래스를 어떻게 사용하는지 문서로 남길 것. 그리고 반드시 지킬 것.
+
+final이 없는 public/protected 메서드들은 
+
+재정의할 경우 동작에 어떤 영향을 주는지를 남겨야 함.
+
+
+상속용으로 설계된 클래스가 아니라면 상속을 쓰지 않는 것이 안전.
+
+상속 금지 : 1. final 선언  2. static factory
+
+Set, List, Map 처럼 핵심 기능을 인터페이스가 정의하고, 클래스가 구현했다. 
+
+위 클래스는 상속이 필요가 없었다.
+
+TODO :: item20
+
